@@ -1,7 +1,7 @@
 {
   "name": "auroralens",
   "displayName": "AuroraLens",
-  "description": "Query private Amazon Aurora PostgreSQL databases from VS Code. Sign in with AWS SSO: no VPN, no bastion, no stored passwords.",
+  "description": "The secure way to query Amazon Aurora from VS Code. No VPN. No bastion. No stored passwords.",
   "version": "0.3.0",
   "preview": true,
   "publisher": "anujshrigiriwar",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "icon": "media/icon.png",
   "galleryBanner": {
-    "color": "#1e3a5f",
+    "color": "#0B1430",
     "theme": "dark"
   },
   "engines": {

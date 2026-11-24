@@ -1,6 +1,6 @@
 # AuroraLens
 
-**Query private Amazon Aurora PostgreSQL databases from VS Code. Sign in with AWS SSO: no VPN, no bastion, no stored passwords.**
+**The secure way to query Amazon Aurora from VS Code. No VPN. No bastion. No stored passwords.**
 
 [Repository](https://github.com/Logic-Leaf/auroralens) | [Issues](https://github.com/Logic-Leaf/auroralens/issues) | [Changelog](CHANGELOG.md) | [Security](SECURITY.md)
 
