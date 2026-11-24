@@ -1,4 +1,4 @@
-![AuroraLens: the secure way to query Amazon Aurora from VS Code](https://raw.githubusercontent.com/Logic-Leaf/auroralens-assets/main/banner.png)
+![AuroraLens: the secure way to query Amazon Aurora from VS Code](https://cdn.jsdelivr.net/gh/Logic-Leaf/auroralens-assets@main/banner.png)
 
 <p align="center">
   <a href="https://github.com/Logic-Leaf/auroralens">Repository</a> &nbsp;·&nbsp;
@@ -30,15 +30,15 @@ Works with **Amazon Aurora PostgreSQL** and **Aurora MySQL** (preview). The engi
 
 ### Results you can work with
 
-![Results grid with type-aware sorting and a JSON inspector](https://raw.githubusercontent.com/Logic-Leaf/auroralens-assets/main/results-grid.png)
+![Results grid with type-aware sorting and a JSON inspector](https://cdn.jsdelivr.net/gh/Logic-Leaf/auroralens-assets@main/results-grid.png)
 
 ### Connection problems explained, not just reported
 
-![Test Connection pinpoints the failing step and the fix](https://raw.githubusercontent.com/Logic-Leaf/auroralens-assets/main/test-connection.png)
+![Test Connection pinpoints the failing step and the fix](https://cdn.jsdelivr.net/gh/Logic-Leaf/auroralens-assets@main/test-connection.png)
 
 ### Your cluster at a glance
 
-![Cluster monitor with CloudWatch metrics and database health](https://raw.githubusercontent.com/Logic-Leaf/auroralens-assets/main/cluster-monitor.png)
+![Cluster monitor with CloudWatch metrics and database health](https://cdn.jsdelivr.net/gh/Logic-Leaf/auroralens-assets@main/cluster-monitor.png)
 
 ## Requirements
 

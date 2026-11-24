@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.2
+
+### Fixed
+- README images are served through the jsDelivr CDN, so they also load on networks that block `raw.githubusercontent.com`.
+
+
 ## 0.4.1
 
 ### Improved
