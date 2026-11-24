@@ -1,37 +1,44 @@
-# AuroraLens
+![AuroraLens: the secure way to query Amazon Aurora from VS Code](images/banner.png)
 
-**The secure way to query Amazon Aurora from VS Code. No VPN. No bastion. No stored passwords.**
+<p align="center">
+  <a href="https://github.com/Logic-Leaf/auroralens">Repository</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Logic-Leaf/auroralens/issues">Issues</a> &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">Changelog</a> &nbsp;·&nbsp;
+  <a href="SECURITY.md">Security</a>
+</p>
 
-[Repository](https://github.com/Logic-Leaf/auroralens) | [Issues](https://github.com/Logic-Leaf/auroralens/issues) | [Changelog](CHANGELOG.md) | [Security](SECURITY.md)
+## Why AuroraLens
 
-![AuroraLens results grid](images/results-grid.png)
+Aurora clusters live in private subnets. Reaching them from a laptop usually means a VPN, a bastion host or an SSH tunnel, plus a database password saved in a local file.
 
-Aurora clusters usually live in private subnets, so reaching them from a laptop means a VPN, a bastion host or a tunnel, plus a database password in a local file. AuroraLens takes a different path. It talks to your cluster through the **RDS Data API**, an AWS-managed HTTPS endpoint secured by IAM. You sign in with the AWS identity you already have, and the database credentials never leave AWS Secrets Manager.
-
-> **Preview.** Supports **Amazon Aurora PostgreSQL** and **Aurora MySQL** (MySQL support is new) with the Data API enabled. The engine is detected automatically. See the [roadmap](#roadmap) for what's next.
+AuroraLens connects through the **RDS Data API**, an AWS-managed HTTPS endpoint protected by IAM. You sign in with the AWS SSO identity you already have. The database password never leaves AWS Secrets Manager, and every statement runs read-only unless you choose otherwise.
 
 ## Features
 
-- **Connection manager**: all your clusters in one sidebar, colour-coded by environment (dev, QA, staging, prod). Add and edit connections in a guided form.
-- **Test Connection**: checks AWS sign-in, the Data API, the secret, the database and read-only mode in turn, then tells you the exact fix for anything that fails.
-- **Schema explorer**: schemas, tables, views and columns, with key markers, types and estimated row counts. Partitions are grouped under their parent table.
-- **Table actions**: right-click a table for *Select Top 1000*, *Count Rows*, *Script as SELECT / INSERT / UPDATE / DELETE* or *View DDL*.
-- **Results grid**:
-  - smooth with thousands of rows
-  - sorting that understands types, plus filtering
-  - resizable columns, four row densities and adjustable font size
-  - a JSON value inspector
-  - copy as CSV, JSON or Markdown
-- **Query history**: reopen or re-run any statement you ran. Only the SQL text is kept, never results.
-- **Cluster monitor**:
-  - cluster status and configuration
-  - CloudWatch CPU, connections, memory and capacity
-  - live database health: sessions, running queries, cache hit ratio and largest tables
-- **Safe by default**: statements run in a database-enforced read-only transaction. Production connections can never write.
+| Feature | What you get |
+|---|---|
+| **Connection manager** | All your clusters in one sidebar, colour-coded by environment, with a guided form to add or edit them. |
+| **Test Connection** | Checks sign-in, the Data API, the secret, the database and read-only mode in turn, and tells you the exact fix if one fails. |
+| **Schema explorer** | Schemas, tables, views and columns, with key markers, types and estimated row counts. Partitions are grouped under their parent table. |
+| **Table actions** | *Select Top 1000*, *Count Rows*, *Script as SELECT / INSERT / UPDATE / DELETE* and *View DDL*, one right-click away. |
+| **Results grid** | Smooth with thousands of rows. Type-aware sorting, filtering, resizable columns, four densities, a JSON inspector, and copy as CSV, JSON or Markdown. |
+| **Query history** | Reopen or re-run anything you ran. Only the SQL text is kept, never results. |
+| **Cluster monitor** | Cluster health, CloudWatch metrics, running queries, sessions and the largest tables. |
+| **Safe by default** | Database-enforced read-only transactions. Production connections can never write. |
 
-![Test Connection explains exactly what to fix](images/test-connection.png)
+Works with **Amazon Aurora PostgreSQL** and **Aurora MySQL** (preview). The engine is detected automatically.
 
-![Cluster monitor](images/cluster-monitor.png)
+### Results you can work with
+
+![Results grid with type-aware sorting and a JSON inspector](images/results-grid.png)
+
+### Connection problems explained, not just reported
+
+![Test Connection pinpoints the failing step and the fix](images/test-connection.png)
+
+### Your cluster at a glance
+
+![Cluster monitor with CloudWatch metrics and database health](images/cluster-monitor.png)
 
 ## Requirements
 

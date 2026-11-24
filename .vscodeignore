@@ -1,8 +1,7 @@
-# Only dist/, media/, package.json, README, CHANGELOG, SECURITY and LICENSE ship in the VSIX.
+# Only dist/, media/, images/ (README screenshots), package.json, README, CHANGELOG, SECURITY and LICENSE ship in the VSIX.
 src/**
 out/**
 docs/**
-images/**
 node_modules/**
 .vscode/**
 .github/**
