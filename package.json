@@ -1,0 +1,733 @@
+{
+  "name": "auroralens",
+  "displayName": "AuroraLens",
+  "description": "Query private Amazon Aurora PostgreSQL databases from VS Code. Sign in with AWS SSO: no VPN, no bastion, no stored passwords.",
+  "version": "0.3.0",
+  "preview": true,
+  "publisher": "anujshrigiriwar",
+  "author": {
+    "name": "Anuj Shrigiriwar",
+    "url": "https://github.com/Logic-Leaf"
+  },
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1e3a5f",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "aws",
+    "amazon aurora",
+    "aurora",
+    "postgresql",
+    "postgres",
+    "rds",
+    "rds data api",
+    "sql",
+    "sql client",
+    "database",
+    "database explorer",
+    "iam identity center",
+    "aws sso",
+    "private vpc",
+    "read-only"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:sql"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "auroralens",
+          "title": "AuroraLens",
+          "icon": "media/icon.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "auroralensPanel",
+          "title": "AuroraLens Results",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "auroralens": [
+        {
+          "id": "auroralens.explorer",
+          "name": "Connections",
+          "icon": "media/icon.svg",
+          "contextualTitle": "AuroraLens"
+        },
+        {
+          "id": "auroralens.history",
+          "name": "Query History",
+          "icon": "media/icon.svg",
+          "contextualTitle": "AuroraLens",
+          "visibility": "collapsed"
+        }
+      ],
+      "auroralensPanel": [
+        {
+          "id": "auroralens.results",
+          "name": "Results",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "auroralens.addConnection",
+        "title": "Add Connection…",
+        "category": "AuroraLens",
+        "icon": "$(add)"
+      },
+      {
+        "command": "auroralens.editConnection",
+        "title": "Edit Connection…",
+        "category": "AuroraLens",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "auroralens.duplicateConnection",
+        "title": "Duplicate Connection…",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.deleteConnection",
+        "title": "Delete Connection",
+        "category": "AuroraLens",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "auroralens.setActive",
+        "title": "Set as Active Connection",
+        "category": "AuroraLens",
+        "icon": "$(pass)"
+      },
+      {
+        "command": "auroralens.testConnection",
+        "title": "Test Connection",
+        "category": "AuroraLens",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "auroralens.openMonitor",
+        "title": "Open Cluster Monitor",
+        "category": "AuroraLens",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "auroralens.copyArn",
+        "title": "Copy Cluster ARN",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.openConsole",
+        "title": "Open in AWS Console",
+        "category": "AuroraLens",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "auroralens.switchEnvironment",
+        "title": "Switch Connection",
+        "category": "AuroraLens",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "auroralens.runQuery",
+        "title": "Run Statement",
+        "category": "AuroraLens",
+        "icon": "$(play)"
+      },
+      {
+        "command": "auroralens.newQuery",
+        "title": "New Query",
+        "category": "AuroraLens",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "auroralens.login",
+        "title": "Sign in (AWS SSO)",
+        "category": "AuroraLens",
+        "icon": "$(key)"
+      },
+      {
+        "command": "auroralens.configureSso",
+        "title": "Set up AWS IAM Identity Center",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.openSettings",
+        "title": "Open Settings",
+        "category": "AuroraLens",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "auroralens.refresh",
+        "title": "Refresh",
+        "category": "AuroraLens",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "auroralens.saveCsv",
+        "title": "Export Last Result as CSV",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.selectTop",
+        "title": "Select Top 1000 Rows",
+        "category": "AuroraLens",
+        "icon": "$(play)"
+      },
+      {
+        "command": "auroralens.table.count",
+        "title": "Count Rows",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.openSelect",
+        "title": "Open SELECT in Editor",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.scriptSelect",
+        "title": "Script as SELECT",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.scriptInsert",
+        "title": "Script as INSERT",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.scriptUpdate",
+        "title": "Script as UPDATE",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.scriptDelete",
+        "title": "Script as DELETE",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.ddl",
+        "title": "View DDL",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.table.copyName",
+        "title": "Copy Qualified Name",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.column.copyName",
+        "title": "Copy Column Name",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.history.open",
+        "title": "Open in Editor",
+        "category": "AuroraLens"
+      },
+      {
+        "command": "auroralens.history.run",
+        "title": "Run Again",
+        "category": "AuroraLens",
+        "icon": "$(play)"
+      },
+      {
+        "command": "auroralens.history.copy",
+        "title": "Copy SQL",
+        "category": "AuroraLens",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "auroralens.history.delete",
+        "title": "Remove from History",
+        "category": "AuroraLens",
+        "icon": "$(close)"
+      },
+      {
+        "command": "auroralens.history.clear",
+        "title": "Clear Query History",
+        "category": "AuroraLens",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "auroralens.editConnection",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.duplicateConnection",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.deleteConnection",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.setActive",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.copyArn",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.openConsole",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.selectTop",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.count",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.openSelect",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.scriptSelect",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.scriptInsert",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.scriptUpdate",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.scriptDelete",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.ddl",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.table.copyName",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.column.copyName",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.history.open",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.history.run",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.history.copy",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.history.delete",
+          "when": "false"
+        },
+        {
+          "command": "auroralens.runQuery",
+          "when": "editorLangId == sql"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "auroralens.addConnection",
+          "when": "view == auroralens.explorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "auroralens.newQuery",
+          "when": "view == auroralens.explorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "auroralens.refresh",
+          "when": "view == auroralens.explorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "auroralens.login",
+          "when": "view == auroralens.explorer",
+          "group": "navigation@4"
+        },
+        {
+          "command": "auroralens.switchEnvironment",
+          "when": "view == auroralens.explorer",
+          "group": "1_main@1"
+        },
+        {
+          "command": "auroralens.openMonitor",
+          "when": "view == auroralens.explorer",
+          "group": "1_main@2"
+        },
+        {
+          "command": "auroralens.testConnection",
+          "when": "view == auroralens.explorer",
+          "group": "1_main@3"
+        },
+        {
+          "command": "auroralens.configureSso",
+          "when": "view == auroralens.explorer",
+          "group": "2_setup@1"
+        },
+        {
+          "command": "auroralens.openSettings",
+          "when": "view == auroralens.explorer",
+          "group": "2_setup@2"
+        },
+        {
+          "command": "auroralens.history.clear",
+          "when": "view == auroralens.history",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "auroralens.setActive",
+          "when": "view == auroralens.explorer && viewItem == connection",
+          "group": "inline@1"
+        },
+        {
+          "command": "auroralens.openMonitor",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "inline@2"
+        },
+        {
+          "command": "auroralens.newQuery",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "1_query@1"
+        },
+        {
+          "command": "auroralens.setActive",
+          "when": "view == auroralens.explorer && viewItem == connection",
+          "group": "1_query@2"
+        },
+        {
+          "command": "auroralens.openMonitor",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "2_inspect@1"
+        },
+        {
+          "command": "auroralens.testConnection",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "2_inspect@2"
+        },
+        {
+          "command": "auroralens.editConnection",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "3_manage@1"
+        },
+        {
+          "command": "auroralens.duplicateConnection",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "3_manage@2"
+        },
+        {
+          "command": "auroralens.deleteConnection",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "3_manage@3"
+        },
+        {
+          "command": "auroralens.copyArn",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "4_copy@1"
+        },
+        {
+          "command": "auroralens.openConsole",
+          "when": "view == auroralens.explorer && viewItem =~ /^connection/",
+          "group": "4_copy@2"
+        },
+        {
+          "command": "auroralens.table.selectTop",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "inline"
+        },
+        {
+          "command": "auroralens.table.selectTop",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "1_data@1"
+        },
+        {
+          "command": "auroralens.table.count",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "1_data@2"
+        },
+        {
+          "command": "auroralens.table.openSelect",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "1_data@3"
+        },
+        {
+          "command": "auroralens.table.scriptSelect",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "2_script@1"
+        },
+        {
+          "command": "auroralens.table.scriptInsert",
+          "when": "view == auroralens.explorer && viewItem == relation.table",
+          "group": "2_script@2"
+        },
+        {
+          "command": "auroralens.table.scriptUpdate",
+          "when": "view == auroralens.explorer && viewItem == relation.table",
+          "group": "2_script@3"
+        },
+        {
+          "command": "auroralens.table.scriptDelete",
+          "when": "view == auroralens.explorer && viewItem == relation.table",
+          "group": "2_script@4"
+        },
+        {
+          "command": "auroralens.table.ddl",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "2_script@5"
+        },
+        {
+          "command": "auroralens.table.copyName",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "group": "3_copy@1"
+        },
+        {
+          "command": "auroralens.column.copyName",
+          "when": "view == auroralens.explorer && viewItem == column",
+          "group": "1_copy@1"
+        },
+        {
+          "command": "auroralens.history.run",
+          "when": "view == auroralens.history && viewItem == history",
+          "group": "inline"
+        },
+        {
+          "command": "auroralens.history.run",
+          "when": "view == auroralens.history && viewItem == history",
+          "group": "1_run@1"
+        },
+        {
+          "command": "auroralens.history.open",
+          "when": "view == auroralens.history && viewItem == history",
+          "group": "1_run@2"
+        },
+        {
+          "command": "auroralens.history.copy",
+          "when": "view == auroralens.history && viewItem == history",
+          "group": "2_copy@1"
+        },
+        {
+          "command": "auroralens.history.delete",
+          "when": "view == auroralens.history && viewItem == history",
+          "group": "3_remove@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "auroralens.runQuery",
+          "when": "resourceLangId == sql",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "auroralens.runQuery",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorLangId == sql"
+      }
+    ],
+    "configuration": {
+      "title": "AuroraLens",
+      "properties": {
+        "auroralens.connections": {
+          "type": "array",
+          "default": [],
+          "scope": "application",
+          "markdownDescription": "Database connections. Non-secret details only: credentials come from your AWS profile and the database password stays in Secrets Manager.\n\nExample:\n```json\n{\n  \"name\": \"orders-dev\",\n  \"environment\": \"dev\",\n  \"profile\": \"my-dev-profile\",\n  \"region\": \"us-east-1\",\n  \"clusterArn\": \"arn:aws:rds:us-east-1:111122223333:cluster:orders-dev\",\n  \"secretArn\": \"arn:aws:secretsmanager:us-east-1:111122223333:secret:orders-dev-reader-AbCdEf\",\n  \"database\": \"orders\"\n}\n```",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "environment",
+              "profile",
+              "region",
+              "clusterArn",
+              "secretArn",
+              "database"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 64,
+                "description": "Display name."
+              },
+              "environment": {
+                "type": "string",
+                "enum": [
+                  "dev",
+                  "qa",
+                  "staging",
+                  "prod"
+                ],
+                "enumDescriptions": [
+                  "Development",
+                  "QA / test (confirmation before writes)",
+                  "Staging (confirmation before writes)",
+                  "Production (always read-only)"
+                ]
+              },
+              "profile": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.@+=-]{0,63}$",
+                "description": "AWS profile name from ~/.aws/config."
+              },
+              "region": {
+                "type": "string",
+                "pattern": "^[a-z]{2}(-[a-z]+)+-\\d{1,2}$"
+              },
+              "clusterArn": {
+                "type": "string",
+                "pattern": "^arn:aws(-cn|-us-gov|-iso|-iso-b)?:rds:[a-z0-9-]+:\\d{12}:cluster:[A-Za-z][A-Za-z0-9-]{0,62}$"
+              },
+              "secretArn": {
+                "type": "string",
+                "pattern": "^arn:aws(-cn|-us-gov|-iso|-iso-b)?:secretsmanager:[a-z0-9-]+:\\d{12}:secret:.+$",
+                "description": "Prefer a secret for a read-only database role."
+              },
+              "database": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_$]{0,62}$"
+              }
+            }
+          }
+        },
+        "auroralens.ssoSession": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "default": null,
+          "scope": "application",
+          "markdownDescription": "AWS IAM Identity Center session used by **Sign in**. Set it with the command **AuroraLens: Set up AWS IAM Identity Center**. Leave empty if your profiles already exist in `~/.aws/config`.",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.@+=-]{0,63}$",
+              "default": "auroralens"
+            },
+            "startUrl": {
+              "type": "string",
+              "pattern": "^https://",
+              "description": "AWS access portal URL, e.g. https://my-company.awsapps.com/start"
+            },
+            "region": {
+              "type": "string",
+              "pattern": "^[a-z]{2}(-[a-z]+)+-\\d{1,2}$"
+            },
+            "roleName": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_+=,.@-]{1,64}$",
+              "description": "Permission set name used for auto-created profiles."
+            }
+          }
+        },
+        "auroralens.readOnly": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "markdownDescription": "Run statements in a server-enforced read-only transaction that is always rolled back. `prod` connections are read-only regardless of this setting."
+        },
+        "auroralens.maxRows": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "maximum": 10000,
+          "scope": "application",
+          "description": "LIMIT appended to top-level SELECT statements that have none."
+        },
+        "auroralens.statementTimeoutSeconds": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 300,
+          "scope": "application",
+          "description": "Server-side statement_timeout for read-only statements."
+        },
+        "auroralens.history.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Keep a local history of executed SQL text (never result data)."
+        }
+      }
+    },
+    "viewsWelcome": [
+      {
+        "view": "auroralens.explorer",
+        "when": "!auroralens.hasConnection",
+        "contents": "Query private Amazon Aurora databases with your AWS SSO identity. No VPN, bastion host or stored passwords.\n[$(add) Add Connection](command:auroralens.addConnection)\n[$(key) Sign in with AWS SSO](command:auroralens.login)\nRead-only by default. Connections are stored in your user settings, never in the workspace."
+      },
+      {
+        "view": "auroralens.history",
+        "contents": "Statements you run appear here. Click one to reopen it; use ▶ to run it again.\nOnly the SQL text is kept, never results."
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./ --noEmit && node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "test": "tsc -p ./tsconfig.test.json && node --test \"out/test/**/*.test.js\"",
+    "package": "npm run compile && npm test && vsce package",
+    "vscode:prepublish": "node esbuild.js --production"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.1175.0",
+    "@aws-sdk/client-rds": "^3.1175.0",
+    "@aws-sdk/client-rds-data": "^3.600.0",
+    "@aws-sdk/credential-providers": "^3.600.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.23.0",
+    "typescript": "^5.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Logic-Leaf/auroralens.git"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true,
+      "description": "All AuroraLens settings are user-level (application scope), so a workspace cannot change connections, sign-in or read-only mode."
+    },
+    "virtualWorkspaces": false
+  },
+  "homepage": "https://github.com/Logic-Leaf/auroralens#readme",
+  "bugs": {
+    "url": "https://github.com/Logic-Leaf/auroralens/issues"
+  }
+}

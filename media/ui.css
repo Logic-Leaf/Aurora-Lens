@@ -1,0 +1,149 @@
+/* AuroraLens webview design system. Uses VS Code theme tokens only, so every theme (light, dark,
+   high contrast) is supported automatically. No inline styles: the CSP forbids them. */
+
+:root {
+  --al-radius: 6px;
+  --al-gap: 8px;
+  --al-border: var(--vscode-panel-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
+  --al-muted: var(--vscode-descriptionForeground);
+  --al-surface: var(--vscode-editor-background);
+  --al-surface-2: var(--vscode-sideBar-background, var(--vscode-editor-background));
+  --al-hover: var(--vscode-list-hoverBackground);
+  --al-select: var(--vscode-list-activeSelectionBackground);
+  --al-select-fg: var(--vscode-list-activeSelectionForeground);
+  --al-focus: var(--vscode-focusBorder);
+  --al-env-dev: var(--vscode-charts-green, #3fb950);
+  --al-env-qa: var(--vscode-charts-yellow, #d29922);
+  --al-env-staging: var(--vscode-charts-orange, #db6d28);
+  --al-env-prod: var(--vscode-charts-red, #f85149);
+  --al-mono: var(--vscode-editor-font-family, ui-monospace, monospace);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--vscode-foreground);
+  background: var(--al-surface);
+}
+:focus-visible { outline: 1px solid var(--al-focus); outline-offset: -1px; }
+.hidden { display: none !important; }
+.muted { color: var(--al-muted); }
+.mono { font-family: var(--al-mono); }
+.grow { flex: 1; }
+
+/* ---------- toolbar ---------- */
+.al-toolbar {
+  display: flex; align-items: center; gap: var(--al-gap); flex-wrap: wrap;
+  padding: 6px 10px; border-bottom: 1px solid var(--al-border); background: var(--al-surface);
+  min-height: 36px;
+}
+.al-toolbar .sep { width: 1px; align-self: stretch; background: var(--al-border); margin: 2px 2px; }
+.al-title { font-weight: 600; }
+
+/* ---------- buttons ---------- */
+.al-btn {
+  display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px;
+  border: 1px solid transparent; border-radius: 4px; cursor: pointer; font: inherit; line-height: 1;
+  background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground);
+}
+.al-btn:hover { background: var(--vscode-button-secondaryHoverBackground); }
+.al-btn.primary { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+.al-btn.primary:hover { background: var(--vscode-button-hoverBackground); }
+.al-btn.ghost { background: transparent; color: var(--vscode-foreground); }
+.al-btn.ghost:hover { background: var(--vscode-toolbar-hoverBackground, var(--al-hover)); }
+.al-btn.icon { width: 24px; padding: 0; justify-content: center; }
+.al-btn[disabled] { opacity: 0.5; cursor: default; }
+.al-btn svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+
+.al-seg { display: inline-flex; border: 1px solid var(--al-border); border-radius: 4px; overflow: hidden; }
+.al-seg button {
+  height: 22px; padding: 0 8px; border: 0; background: transparent; color: var(--al-muted);
+  font: inherit; font-size: 11px; cursor: pointer;
+}
+.al-seg button + button { border-left: 1px solid var(--al-border); }
+.al-seg button[aria-pressed='true'] { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+
+/* ---------- chips ---------- */
+.al-chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
+  border: 1px solid var(--al-border); color: var(--vscode-foreground);
+}
+.al-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--al-muted); }
+.al-chip.env-dev::before { background: var(--al-env-dev); }
+.al-chip.env-qa::before { background: var(--al-env-qa); }
+.al-chip.env-staging::before { background: var(--al-env-staging); }
+.al-chip.env-prod { border-color: var(--al-env-prod); }
+.al-chip.env-prod::before { background: var(--al-env-prod); }
+.al-chip.ok::before { background: var(--al-env-dev); }
+.al-chip.warn::before { background: var(--al-env-qa); }
+.al-chip.bad::before { background: var(--al-env-prod); }
+.al-chip.plain::before { display: none; }
+
+/* ---------- inputs ---------- */
+.al-input, .al-select {
+  height: 26px; padding: 0 8px; font: inherit; border-radius: 4px;
+  background: var(--vscode-input-background); color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--al-border));
+}
+.al-input::placeholder { color: var(--vscode-input-placeholderForeground); }
+.al-input:focus, .al-select:focus { outline: 1px solid var(--al-focus); outline-offset: -1px; }
+.al-input.invalid { border-color: var(--vscode-inputValidation-errorBorder, var(--al-env-prod)); }
+.al-search { width: 200px; }
+
+/* ---------- cards & sections ---------- */
+.al-card { border: 1px solid var(--al-border); border-radius: var(--al-radius); background: var(--al-surface-2); }
+.al-card > header {
+  display: flex; align-items: center; gap: var(--al-gap); padding: 8px 12px; border-bottom: 1px solid var(--al-border);
+  font-weight: 600;
+}
+.al-card > .body { padding: 10px 12px; }
+.al-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-muted); margin: 18px 0 8px; }
+
+/* ---------- simple data tables (monitor) ---------- */
+.al-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.al-table th { text-align: left; font-weight: 600; color: var(--al-muted); padding: 5px 8px; border-bottom: 1px solid var(--al-border); white-space: nowrap; }
+.al-table td { padding: 5px 8px; border-bottom: 1px solid var(--al-border); vertical-align: top; }
+.al-table td.num, .al-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.al-table td.sql { font-family: var(--al-mono); font-size: 11px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.al-table tr:hover td { background: var(--al-hover); }
+
+/* ---------- empty / status ---------- */
+.al-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; height: 100%; padding: 24px; text-align: center; color: var(--al-muted); }
+.al-empty h3 { margin: 0; color: var(--vscode-foreground); font-size: 13px; }
+.al-empty kbd, kbd {
+  font-family: var(--al-mono); font-size: 11px; padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--al-border); background: var(--vscode-keybindingLabel-background, transparent);
+}
+.al-error { padding: 14px 16px; }
+.al-error h3 { margin: 0 0 6px; color: var(--vscode-errorForeground); font-size: 13px; }
+.al-error .fix { margin: 0 0 10px; }
+.al-error pre { margin: 0; white-space: pre-wrap; font-family: var(--al-mono); font-size: 12px; color: var(--al-muted); }
+.al-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--al-border); border-top-color: var(--vscode-progressBar-background); animation: al-spin 0.8s linear infinite; }
+@keyframes al-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .al-spinner { animation: none; } }
+
+/* ---------- popup menu ---------- */
+.al-menu {
+  position: fixed; z-index: 50; min-width: 180px; padding: 4px 0; border-radius: 5px;
+  background: var(--vscode-menu-background, var(--vscode-editorWidget-background));
+  color: var(--vscode-menu-foreground, var(--vscode-foreground));
+  border: 1px solid var(--vscode-menu-border, var(--al-border));
+  box-shadow: 0 4px 14px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.35));
+}
+.al-menu button {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 4px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.al-menu button:hover, .al-menu button:focus { background: var(--vscode-menu-selectionBackground, var(--al-select)); color: var(--vscode-menu-selectionForeground, var(--al-select-fg)); outline: none; }
+.al-menu hr { border: 0; border-top: 1px solid var(--vscode-menu-separatorBackground, var(--al-border)); margin: 4px 0; }
+.al-menu .key { color: var(--al-muted); font-size: 11px; }
+
+.al-toast {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 60; padding: 5px 12px; border-radius: 4px;
+  background: var(--vscode-editorWidget-background); border: 1px solid var(--al-border); font-size: 12px;
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+*.vsix
+.DS_Store
+# Private, org-specific settings (never commit or package)
+*.local.*
+# Internal planning documents (kept locally, not published)
+docs/
