@@ -4,8 +4,8 @@ Thank you for helping improve AuroraLens. Bug reports, ideas and pull requests a
 
 ## Reporting bugs and ideas
 
-- **Bugs:** open a [bug report](https://github.com/Logic-Leaf/auroralens/issues/new?template=bug_report.yml).
-- **Ideas:** open a [feature request](https://github.com/Logic-Leaf/auroralens/issues/new?template=feature_request.yml).
+- **Bugs:** open a [bug report](https://github.com/Logic-Leaf/Aurora-Lens/issues/new?template=bug_report.yml).
+- **Ideas:** open a [feature request](https://github.com/Logic-Leaf/Aurora-Lens/issues/new?template=feature_request.yml).
 - **Security issues:** do **not** open a public issue. Follow [SECURITY.md](SECURITY.md).
 
 Never paste account IDs, ARNs, endpoints, query results or credentials into an issue.
@@ -15,7 +15,7 @@ Never paste account IDs, ARNs, endpoints, query results or credentials into an i
 Requirements: Node.js 20+, VS Code 1.85+, and AWS CLI v2 (for testing sign-in).
 
 ```sh
-git clone https://github.com/Logic-Leaf/auroralens.git
+git clone https://github.com/Logic-Leaf/Aurora-Lens.git
 cd auroralens
 npm ci
 npm run compile   # type-check and bundle

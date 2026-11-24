@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug. **Never include account IDs, ARNs, endpoints, query results or credentials.** For security vulnerabilities, follow [SECURITY.md](https://github.com/Logic-Leaf/auroralens/blob/main/SECURITY.md) instead.
+        Thanks for reporting a bug. **Never include account IDs, ARNs, endpoints, query results or credentials.** For security vulnerabilities, follow [SECURITY.md](https://github.com/Logic-Leaf/Aurora-Lens/blob/main/SECURITY.md) instead.
   - type: textarea
     id: what
     attributes:

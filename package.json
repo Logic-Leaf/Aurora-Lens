@@ -2,7 +2,7 @@
   "name": "auroralens",
   "displayName": "AuroraLens",
   "description": "The secure way to query Amazon Aurora from VS Code. No VPN. No bastion. No stored passwords.",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "preview": true,
   "publisher": "anujshrigiriwar",
   "author": {
@@ -719,7 +719,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Logic-Leaf/auroralens.git"
+    "url": "https://github.com/Logic-Leaf/Aurora-Lens.git"
   },
   "capabilities": {
     "untrustedWorkspaces": {
@@ -728,8 +728,8 @@
     },
     "virtualWorkspaces": false
   },
-  "homepage": "https://github.com/Logic-Leaf/auroralens#readme",
+  "homepage": "https://github.com/Logic-Leaf/Aurora-Lens#readme",
   "bugs": {
-    "url": "https://github.com/Logic-Leaf/auroralens/issues"
+    "url": "https://github.com/Logic-Leaf/Aurora-Lens/issues"
   }
 }

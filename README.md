@@ -1,8 +1,8 @@
 ![AuroraLens: the secure way to query Amazon Aurora from VS Code](https://cdn.jsdelivr.net/gh/Logic-Leaf/auroralens-assets@main/banner.png)
 
 <p align="center">
-  <a href="https://github.com/Logic-Leaf/auroralens">Repository</a> &nbsp;·&nbsp;
-  <a href="https://github.com/Logic-Leaf/auroralens/issues">Issues</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Logic-Leaf/Aurora-Lens">Repository</a> &nbsp;·&nbsp;
+  <a href="https://github.com/Logic-Leaf/Aurora-Lens/issues">Issues</a> &nbsp;·&nbsp;
   <a href="CHANGELOG.md">Changelog</a> &nbsp;·&nbsp;
   <a href="SECURITY.md">Security</a>
 </p>
@@ -154,7 +154,7 @@ Run **Test Connection** (right-click a connection) first. It pinpoints the faili
 - Amazon RDS instances through AWS Systems Manager port forwarding
 - Performance Insights top SQL, result tabs and ER diagrams
 
-Ideas and bug reports are welcome on [GitHub Issues](https://github.com/Logic-Leaf/auroralens/issues).
+Ideas and bug reports are welcome on [GitHub Issues](https://github.com/Logic-Leaf/Aurora-Lens/issues).
 
 ## Trademarks
 

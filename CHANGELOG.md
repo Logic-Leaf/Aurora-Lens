@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.3
+
+### Changed
+- The source code is now public at [github.com/Logic-Leaf/Aurora-Lens](https://github.com/Logic-Leaf/Aurora-Lens). Repository, issue and security links point there.
+
+
 ## 0.4.2
 
 ### Fixed

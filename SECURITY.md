@@ -6,7 +6,7 @@ AuroraLens handles access to production databases, so security reports get prior
 
 **Please do not open a public issue for security problems.**
 
-Report them privately through GitHub: on the [repository](https://github.com/Logic-Leaf/auroralens), open the **Security** tab and choose **Report a vulnerability**.
+Report them privately through GitHub: on the [repository](https://github.com/Logic-Leaf/Aurora-Lens), open the **Security** tab and choose **Report a vulnerability**.
 
 Please include:
 - the AuroraLens version and VS Code version
