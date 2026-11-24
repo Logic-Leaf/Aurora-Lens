@@ -1,7 +1,9 @@
-# Only dist/, media/, images/ (README screenshots), package.json, README, CHANGELOG, SECURITY and LICENSE ship in the VSIX.
+# Only dist/, media/, package.json, README, CHANGELOG, SECURITY and LICENSE ship in the VSIX.
+# README images load from GitHub (VS Code only shows https images on the Details page).
 src/**
 out/**
 docs/**
+images/**
 node_modules/**
 .vscode/**
 .github/**

@@ -702,8 +702,7 @@
     "watch": "node esbuild.js --watch",
     "test": "tsc -p ./tsconfig.test.json && node --test \"out/test/**/*.test.js\"",
     "package": "npm run compile && npm test && vsce package",
-    "vscode:prepublish": "node esbuild.js --production",
-    "package:local": "npm run compile && npm test && vsce package --no-rewrite-relative-links"
+    "vscode:prepublish": "node esbuild.js --production"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.1175.0",
