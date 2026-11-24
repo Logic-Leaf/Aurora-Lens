@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1
+
+### Improved
+- The schema tree groups objects into **Tables** and **Views** folders, with counts, so large schemas stay readable.
+- README images are now served from a public assets repository, so they show in VS Code and on the Marketplace.
+
+
 ## 0.4.0
 
 ### Added

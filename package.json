@@ -2,7 +2,7 @@
   "name": "auroralens",
   "displayName": "AuroraLens",
   "description": "The secure way to query Amazon Aurora from VS Code. No VPN. No bastion. No stored passwords.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "preview": true,
   "publisher": "anujshrigiriwar",
   "author": {

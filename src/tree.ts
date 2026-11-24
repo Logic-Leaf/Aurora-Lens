@@ -73,6 +73,23 @@ export class SchemaNode extends vscode.TreeItem {
   }
 }
 
+/** "Tables (122)" / "Views (12)" folders keep large schemas readable. */
+export class GroupNode extends vscode.TreeItem {
+  readonly kind = 'group';
+  constructor(
+    readonly conn: Connection,
+    readonly schema: string,
+    readonly group: 'tables' | 'views',
+    readonly relations: Relation[],
+  ) {
+    super(group === 'tables' ? 'Tables' : 'Views', vscode.TreeItemCollapsibleState.Collapsed);
+    this.id = `g:${conn.name}/${schema}/${group}`;
+    this.description = String(relations.length);
+    this.contextValue = `group.${group}`;
+    this.iconPath = new vscode.ThemeIcon(group === 'tables' ? 'folder' : 'folder-library');
+  }
+}
+
 export class RelationNode extends vscode.TreeItem {
   readonly kind = 'relation';
   constructor(
@@ -159,7 +176,7 @@ export class MessageNode extends vscode.TreeItem {
   }
 }
 
-export type Node = ConnectionNode | SchemaNode | RelationNode | PartitionsFolderNode | ColumnNode | MessageNode;
+export type Node = ConnectionNode | SchemaNode | GroupNode | RelationNode | PartitionsFolderNode | ColumnNode | MessageNode;
 
 export class ExplorerTree implements vscode.TreeDataProvider<Node> {
   private readonly emitter = new vscode.EventEmitter<Node | undefined>();
@@ -202,9 +219,19 @@ export class ExplorerTree implements vscode.TreeDataProvider<Node> {
       }
       if (node instanceof SchemaNode) {
         const rels: Relation[] = await db.relations(node.schema);
-        return rels.length
-          ? rels.map((r) => new RelationNode(conn, node.schema, r.name, r.kind, Number(r.estimate), Number(r.partitions), r.comment))
-          : [new MessageNode('No tables or views', 'info')];
+        const tables = rels.filter((r) => r.kind !== 'v' && r.kind !== 'm');
+        const views = rels.filter((r) => r.kind === 'v' || r.kind === 'm');
+        const groups: Node[] = [];
+        if (tables.length) {
+          groups.push(new GroupNode(conn, node.schema, 'tables', tables));
+        }
+        if (views.length) {
+          groups.push(new GroupNode(conn, node.schema, 'views', views));
+        }
+        return groups.length ? groups : [new MessageNode('No tables or views', 'info')];
+      }
+      if (node instanceof GroupNode) {
+        return node.relations.map((r) => new RelationNode(conn, node.schema, r.name, r.kind, Number(r.estimate), Number(r.partitions), r.comment));
       }
       if (node instanceof PartitionsFolderNode) {
         const parts: Partition[] = await db.partitions(node.schema, node.table);
