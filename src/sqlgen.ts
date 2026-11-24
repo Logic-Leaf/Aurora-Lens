@@ -1,4 +1,5 @@
-// SQL generation for table actions (no vscode import, unit-tested). PostgreSQL dialect.
+// SQL generation for table actions (no vscode import, unit-tested).
+import type { Engine } from './guards';
 
 const RESERVED = new Set(
   (
@@ -12,13 +13,16 @@ const RESERVED = new Set(
   ).split(' '),
 );
 
-/** Quotes an identifier only when PostgreSQL requires it. */
-export function quoteIdent(name: string): string {
+/** PostgreSQL: quotes only when required. MySQL: always backtick-quotes (safe for any name). */
+export function quoteIdent(name: string, engine: Engine = 'postgres'): string {
+  if (engine === 'mysql') {
+    return `\`${name.replace(/`/g, '``')}\``;
+  }
   return /^[a-z_][a-z0-9_$]*$/.test(name) && !RESERVED.has(name) ? name : `"${name.replace(/"/g, '""')}"`;
 }
 
-export function qualified(schema: string, table: string): string {
-  return `${quoteIdent(schema)}.${quoteIdent(table)}`;
+export function qualified(schema: string, table: string, engine: Engine = 'postgres'): string {
+  return `${quoteIdent(schema, engine)}.${quoteIdent(table, engine)}`;
 }
 
 export interface ColumnInfo {
@@ -51,17 +55,17 @@ export interface TableDefinition {
   comment: string | null;
 }
 
-export function selectTop(schema: string, table: string, n: number): string {
-  return `SELECT *\nFROM ${qualified(schema, table)}\nLIMIT ${Math.max(1, Math.floor(n))};\n`;
+export function selectTop(schema: string, table: string, n: number, engine: Engine = 'postgres'): string {
+  return `SELECT *\nFROM ${qualified(schema, table, engine)}\nLIMIT ${Math.max(1, Math.floor(n))};\n`;
 }
 
-export function selectCount(schema: string, table: string): string {
-  return `SELECT count(*) AS row_count\nFROM ${qualified(schema, table)};\n`;
+export function selectCount(schema: string, table: string, engine: Engine = 'postgres'): string {
+  return `SELECT count(*) AS row_count\nFROM ${qualified(schema, table, engine)};\n`;
 }
 
-export function scriptSelect(schema: string, table: string, columns: ColumnInfo[]): string {
-  const cols = columns.length ? columns.map((c) => `  ${quoteIdent(c.name)}`).join(',\n') : '  *';
-  return `SELECT\n${cols}\nFROM ${qualified(schema, table)}\nWHERE 1 = 1\nLIMIT 100;\n`;
+export function scriptSelect(schema: string, table: string, columns: ColumnInfo[], engine: Engine = 'postgres'): string {
+  const cols = columns.length ? columns.map((c) => `  ${quoteIdent(c.name, engine)}`).join(',\n') : '  *';
+  return `SELECT\n${cols}\nFROM ${qualified(schema, table, engine)}\nWHERE 1 = 1\nLIMIT 100;\n`;
 }
 
 function describe(c: ColumnInfo): string {
@@ -83,28 +87,28 @@ function aligned(values: string[], comments: string[]): string[] {
   return values.map((v, i) => `  ${v.padEnd(width)}  -- ${comments[i]}`);
 }
 
-export function scriptInsert(schema: string, table: string, columns: ColumnInfo[]): string {
-  const names = columns.map((c) => quoteIdent(c.name));
+export function scriptInsert(schema: string, table: string, columns: ColumnInfo[], engine: Engine = 'postgres'): string {
+  const names = columns.map((c) => quoteIdent(c.name, engine));
   const values = columns.map((c, i) => (i < columns.length - 1 ? 'NULL,' : 'NULL'));
   return (
-    `INSERT INTO ${qualified(schema, table)} (\n${names.map((n) => `  ${n}`).join(',\n')}\n) VALUES (\n` +
+    `INSERT INTO ${qualified(schema, table, engine)} (\n${names.map((n) => `  ${n}`).join(',\n')}\n) VALUES (\n` +
     `${aligned(values, columns.map((c) => `${c.name}: ${describe(c)}`)).join('\n')}\n);\n`
   );
 }
 
-function pkWhere(columns: ColumnInfo[]): string {
+function pkWhere(columns: ColumnInfo[], engine: Engine): string {
   const pk = columns.filter((c) => c.isPk);
-  return pk.length ? pk.map((c) => `${quoteIdent(c.name)} = NULL`).join('\n  AND ') : '/* no primary key: add a condition */ false';
+  return pk.length ? pk.map((c) => `${quoteIdent(c.name, engine)} = NULL`).join('\n  AND ') : '/* no primary key: add a condition */ false';
 }
 
-export function scriptUpdate(schema: string, table: string, columns: ColumnInfo[]): string {
+export function scriptUpdate(schema: string, table: string, columns: ColumnInfo[], engine: Engine = 'postgres'): string {
   const settable = columns.filter((c) => !c.isPk);
-  const sets = settable.map((c, i) => `${quoteIdent(c.name)} = NULL${i < settable.length - 1 ? ',' : ''}`);
-  return `UPDATE ${qualified(schema, table)}\nSET\n${aligned(sets, settable.map(describe)).join('\n')}\nWHERE ${pkWhere(columns)};\n`;
+  const sets = settable.map((c, i) => `${quoteIdent(c.name, engine)} = NULL${i < settable.length - 1 ? ',' : ''}`);
+  return `UPDATE ${qualified(schema, table, engine)}\nSET\n${aligned(sets, settable.map(describe)).join('\n')}\nWHERE ${pkWhere(columns, engine)};\n`;
 }
 
-export function scriptDelete(schema: string, table: string, columns: ColumnInfo[]): string {
-  return `DELETE FROM ${qualified(schema, table)}\nWHERE ${pkWhere(columns)};\n`;
+export function scriptDelete(schema: string, table: string, columns: ColumnInfo[], engine: Engine = 'postgres'): string {
+  return `DELETE FROM ${qualified(schema, table, engine)}\nWHERE ${pkWhere(columns, engine)};\n`;
 }
 
 function literal(text: string): string {

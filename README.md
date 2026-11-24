@@ -8,7 +8,7 @@
 
 Aurora clusters usually live in private subnets, so reaching them from a laptop means a VPN, a bastion host or a tunnel, plus a database password in a local file. AuroraLens takes a different path. It talks to your cluster through the **RDS Data API**, an AWS-managed HTTPS endpoint secured by IAM. You sign in with the AWS identity you already have, and the database credentials never leave AWS Secrets Manager.
 
-> **Preview.** Supports Amazon Aurora PostgreSQL with the Data API enabled. See the [roadmap](#roadmap) for what's next.
+> **Preview.** Supports **Amazon Aurora PostgreSQL** and **Aurora MySQL** (MySQL support is new) with the Data API enabled. The engine is detected automatically. See the [roadmap](#roadmap) for what's next.
 
 ## Features
 
@@ -37,7 +37,7 @@ Aurora clusters usually live in private subnets, so reaching them from a laptop 
 
 - VS Code 1.85 or later on macOS, Windows or Linux.
 - [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) for the SSO sign-in step.
-- An Aurora PostgreSQL cluster with the **Data API enabled**, plus the IAM permissions listed under [For administrators](#for-administrators).
+- An Aurora PostgreSQL or Aurora MySQL cluster with the **Data API enabled**, plus the IAM permissions listed under [For administrators](#for-administrators).
 
 ## Getting started
 
@@ -49,7 +49,9 @@ Aurora clusters usually live in private subnets, so reaching them from a laptop 
 ## Security and privacy
 
 - **No credentials are stored.** AuroraLens never saves AWS keys, tokens or database passwords. AWS sign-in uses the standard AWS SDK credential chain, and the Data API reads the database secret inside AWS.
-- **Read-only is enforced by the database.** Each statement runs in a `READ ONLY` transaction with a `statement_timeout`, and the transaction is always rolled back. A SQL tokenizer also blocks side-effect functions such as `pg_terminate_backend`, `dblink` and `aws_lambda.*`.
+- **Read-only is enforced by the database.** Each statement runs in a `READ ONLY` transaction with a timeout, and the transaction is always rolled back. A dialect-aware SQL tokenizer also blocks side effects that a read-only transaction can't stop:
+  - PostgreSQL: `pg_terminate_backend`, `dblink` and `aws_lambda.*`
+  - MySQL: `SELECT … INTO OUTFILE S3`, `mysql.lambda_async` and `/*! … */` executable comments
 - **Workspaces can't change your settings.** All settings are user-level, so a repository's `.vscode/settings.json` cannot alter connections, sign-in or read-only mode.
 - **No silent file changes.** AuroraLens shows you the exact lines before adding anything to `~/.aws/config`.
 - **No telemetry.** Nothing is sent anywhere except the AWS endpoints in your own account.
@@ -68,8 +70,13 @@ aws rds enable-http-endpoint --resource-arn arn:aws:rds:<region>:<account>:clust
 **Recommended: a read-only database user.** AuroraLens already enforces read-only mode. A read-only user adds a second, independent layer.
 
 ```sql
+-- PostgreSQL 14+
 CREATE ROLE auroralens_reader LOGIN PASSWORD '<generated>';
-GRANT pg_read_all_data TO auroralens_reader;   -- PostgreSQL 14+
+GRANT pg_read_all_data TO auroralens_reader;
+
+-- MySQL
+CREATE USER 'auroralens_reader'@'%' IDENTIFIED BY '<generated>';
+GRANT SELECT, SHOW VIEW ON *.* TO 'auroralens_reader'@'%';
 ```
 
 Store the user's credentials in Secrets Manager as `{"username": "...", "password": "..."}` and use that secret's ARN in the connection.
@@ -137,7 +144,6 @@ Run **Test Connection** (right-click a connection) first. It pinpoints the faili
 
 - Native IAM Identity Center sign-in, with no AWS CLI needed
 - Cluster discovery across accounts and Regions
-- Aurora MySQL
 - Amazon RDS instances through AWS Systems Manager port forwarding
 - Performance Insights top SQL, result tabs and ER diagrams
 

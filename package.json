@@ -2,7 +2,7 @@
   "name": "auroralens",
   "displayName": "AuroraLens",
   "description": "The secure way to query Amazon Aurora from VS Code. No VPN. No bastion. No stored passwords.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "preview": true,
   "publisher": "anujshrigiriwar",
   "author": {
@@ -37,7 +37,9 @@
     "iam identity center",
     "aws sso",
     "private vpc",
-    "read-only"
+    "read-only",
+    "mysql",
+    "aurora mysql"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
@@ -461,27 +463,27 @@
         },
         {
           "command": "auroralens.table.selectTop",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "inline"
         },
         {
           "command": "auroralens.table.selectTop",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "1_data@1"
         },
         {
           "command": "auroralens.table.count",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "1_data@2"
         },
         {
           "command": "auroralens.table.openSelect",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "1_data@3"
         },
         {
           "command": "auroralens.table.scriptSelect",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "2_script@1"
         },
         {
@@ -501,12 +503,12 @@
         },
         {
           "command": "auroralens.table.ddl",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "2_script@5"
         },
         {
           "command": "auroralens.table.copyName",
-          "when": "view == auroralens.explorer && viewItem =~ /^relation/",
+          "when": "view == auroralens.explorer && viewItem =~ /^relation\\.(table|view)$/",
           "group": "3_copy@1"
         },
         {

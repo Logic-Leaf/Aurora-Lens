@@ -110,7 +110,7 @@
     }
     content.append(two);
     block('Largest tables', 'largest');
-    block('Top statements (pg_stat_statements)', 'statements');
+    block('Top statements', 'statements');
     const note = el('p', 'muted', 'Cluster, instance and metric sections use your AWS role (rds:Describe*, cloudwatch:GetMetricData). Database sections use the connection’s own database access. Everything is read-only.');
     note.classList.add('privacy');
     content.append(note);
@@ -260,7 +260,13 @@
     statements(d, box) {
       if (d && d.unavailable) {
         const e = el('div', 'sec-error');
-        e.append(el('b', '', 'pg_stat_statements is not enabled'), el('div', 'fix', 'Ask a DBA to add pg_stat_statements to shared_preload_libraries and run CREATE EXTENSION pg_stat_statements; to see the most expensive statements here.'));
+        const mysql = info && info.engine === 'mysql';
+        e.append(
+          el('b', '', mysql ? 'Statement statistics are not available' : 'pg_stat_statements is not enabled'),
+          el('div', 'fix', mysql
+            ? 'Enable performance_schema on the cluster parameter group and grant SELECT on performance_schema to see the most expensive statements here.'
+            : 'Ask a DBA to add pg_stat_statements to shared_preload_libraries and run CREATE EXTENSION pg_stat_statements; to see the most expensive statements here.'),
+        );
         box.replaceChildren(e);
         return;
       }
@@ -342,6 +348,8 @@
       info = m;
       SECTION_IDS.forEach((id) => delete sections[id]);
       shell();
+    } else if (m.type === 'engine') {
+      if (info) info.engine = m.engine;
     } else if (m.type === 'section') {
       const box = document.getElementById(`sec-${m.name}`);
       if (!box) return;

@@ -20,6 +20,8 @@ const KIND: Record<string, { icon: string; label: string; context: string }> = {
   v: { icon: 'eye', label: 'view', context: 'view' },
   m: { icon: 'symbol-structure', label: 'materialized view', context: 'view' },
   f: { icon: 'link-external', label: 'foreign table', context: 'table' },
+  // MySQL partitions are part of their table, not separately queryable.
+  x: { icon: 'symbol-array', label: 'partition', context: 'partition' },
 };
 
 export class ClientPool {
@@ -83,7 +85,7 @@ export class RelationNode extends vscode.TreeItem {
     comment: string | null,
     bound?: string | null,
   ) {
-    super(name, vscode.TreeItemCollapsibleState.Collapsed);
+    super(name, relKind === 'x' ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Collapsed);
     const k = KIND[relKind] ?? KIND.r;
     this.id = `r:${conn.name}/${schema}/${name}`;
     this.contextValue = `relation.${k.context}`;
@@ -99,7 +101,7 @@ export class RelationNode extends vscode.TreeItem {
     const md = new vscode.MarkdownString();
     md.appendMarkdown(`**${escapeMd(schema)}.${escapeMd(name)}** · ${k.label}`);
     if (relKind !== 'v') {
-      md.appendMarkdown(`\n\nEstimated rows: ${formatCount(estimate)} (from planner statistics)`);
+      md.appendMarkdown(`\n\nEstimated rows: ${formatCount(estimate)} (from table statistics)`);
     }
     if (bound) {
       md.appendMarkdown(`\n\n${code(bound)}`);

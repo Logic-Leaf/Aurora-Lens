@@ -121,3 +121,131 @@ FROM pg_stat_statements
 WHERE dbid = (SELECT oid FROM pg_database WHERE datname = current_database())
 ORDER BY total_exec_time DESC
 LIMIT 10`;
+
+// ---------------- Aurora MySQL (information_schema / performance_schema) ----------------
+// Column aliases are lower case so results map onto the same shapes as PostgreSQL.
+
+const MY_SYSTEM = "('mysql', 'information_schema', 'performance_schema', 'sys')";
+
+export const MY_SCHEMAS = `
+SELECT schema_name AS name FROM information_schema.schemata
+WHERE schema_name NOT IN ${MY_SYSTEM}
+ORDER BY 1`;
+
+/** MySQL partitions are not separate tables, so the parent's partition count comes from information_schema.partitions. */
+export const MY_RELATIONS = `
+SELECT t.table_name AS name,
+       CASE WHEN t.table_type = 'VIEW' THEN 'v'
+            WHEN (SELECT COUNT(*) FROM information_schema.partitions p
+                  WHERE p.table_schema = t.table_schema AND p.table_name = t.table_name AND p.partition_name IS NOT NULL) > 0 THEN 'p'
+            ELSE 'r' END AS kind,
+       COALESCE(t.table_rows, 0) AS estimate,
+       (SELECT COUNT(*) FROM information_schema.partitions p
+        WHERE p.table_schema = t.table_schema AND p.table_name = t.table_name AND p.partition_name IS NOT NULL) AS partitions,
+       NULLIF(t.table_comment, '') AS comment
+FROM information_schema.tables t
+WHERE t.table_schema = :schema
+ORDER BY t.table_name`;
+
+export const MY_PARTITIONS = `
+SELECT table_schema AS \`schema\`, partition_name AS name, 'x' AS kind, COALESCE(table_rows, 0) AS estimate,
+       CONCAT(partition_method, ' ', COALESCE(partition_description, '')) AS bound
+FROM information_schema.partitions
+WHERE table_schema = :schema AND table_name = :table AND partition_name IS NOT NULL
+ORDER BY partition_ordinal_position`;
+
+export const MY_COLUMNS = `
+SELECT c.column_name AS name,
+       c.column_type AS type,
+       c.is_nullable = 'NO' AS not_null,
+       c.column_default AS default_value,
+       c.column_key = 'PRI' AS is_pk,
+       EXISTS (SELECT 1 FROM information_schema.key_column_usage k
+               WHERE k.table_schema = c.table_schema AND k.table_name = c.table_name
+                 AND k.column_name = c.column_name AND k.referenced_table_name IS NOT NULL) AS is_fk,
+       NULLIF(c.column_comment, '') AS comment
+FROM information_schema.columns c
+WHERE c.table_schema = :schema AND c.table_name = :table
+ORDER BY c.ordinal_position`;
+
+export const MY_IDENTITY = `
+SELECT CURRENT_USER() AS db_user, DATABASE() AS \`database\`, CONCAT('MySQL ', VERSION()) AS version`;
+
+export const MY_DB_OVERVIEW = `
+SELECT (SELECT COALESCE(SUM(data_length + index_length), 0) FROM information_schema.tables WHERE table_schema = DATABASE()) AS size_bytes,
+       (SELECT ROUND(100 * (1 - r.variable_value / NULLIF(q.variable_value, 0)), 2)
+          FROM performance_schema.global_status r, performance_schema.global_status q
+         WHERE r.variable_name = 'Innodb_buffer_pool_reads' AND q.variable_name = 'Innodb_buffer_pool_read_requests') AS cache_hit_pct,
+       (SELECT SUM(variable_value) FROM performance_schema.global_status WHERE variable_name IN ('Com_commit', 'Com_rollback')) AS transactions,
+       NULL AS deadlocks,
+       @@max_connections AS max_connections,
+       CONCAT('MySQL ', VERSION()) AS version`;
+
+export const MY_DB_SESSIONS = `
+SELECT CASE command WHEN 'Sleep' THEN 'idle' WHEN 'Query' THEN 'active' ELSE LOWER(command) END AS state, COUNT(*) AS sessions
+FROM information_schema.processlist
+GROUP BY 1
+ORDER BY 2 DESC`;
+
+export const MY_DB_LONG_RUNNING = `
+SELECT id AS pid, user AS db_user, command AS state, time AS seconds, state AS waiting_on, LEFT(info, 300) AS query
+FROM information_schema.processlist
+WHERE command <> 'Sleep' AND id <> CONNECTION_ID() AND info IS NOT NULL
+ORDER BY time DESC
+LIMIT 10`;
+
+export const MY_DB_LARGEST_TABLES = `
+SELECT table_schema AS \`schema\`, table_name AS name, data_length + index_length AS bytes, COALESCE(table_rows, 0) AS estimate
+FROM information_schema.tables
+WHERE table_schema NOT IN ${MY_SYSTEM} AND table_type = 'BASE TABLE'
+ORDER BY data_length + index_length DESC
+LIMIT 10`;
+
+/** Timers in performance_schema are picoseconds: divide by 1e9 for milliseconds. */
+export const MY_DB_TOP_STATEMENTS = `
+SELECT LEFT(digest_text, 300) AS query, count_star AS calls,
+       ROUND(sum_timer_wait / 1e9, 1) AS total_ms, ROUND(avg_timer_wait / 1e9, 2) AS mean_ms, sum_rows_sent AS \`rows\`
+FROM performance_schema.events_statements_summary_by_digest
+WHERE schema_name = DATABASE()
+ORDER BY sum_timer_wait DESC
+LIMIT 10`;
+
+export interface Catalog {
+  schemas: string;
+  relations: string;
+  partitions: string;
+  columns: string;
+  identity: string;
+  overview: string;
+  sessions: string;
+  running: string;
+  largest: string;
+  topStatements: string;
+}
+
+export const CATALOG: Record<'postgres' | 'mysql', Catalog> = {
+  postgres: {
+    schemas: SQL_SCHEMAS,
+    relations: SQL_RELATIONS,
+    partitions: SQL_PARTITIONS,
+    columns: SQL_COLUMNS,
+    identity: SQL_IDENTITY,
+    overview: SQL_DB_OVERVIEW,
+    sessions: SQL_DB_SESSIONS,
+    running: SQL_DB_LONG_RUNNING,
+    largest: SQL_DB_LARGEST_TABLES,
+    topStatements: SQL_DB_TOP_STATEMENTS,
+  },
+  mysql: {
+    schemas: MY_SCHEMAS,
+    relations: MY_RELATIONS,
+    partitions: MY_PARTITIONS,
+    columns: MY_COLUMNS,
+    identity: MY_IDENTITY,
+    overview: MY_DB_OVERVIEW,
+    sessions: MY_DB_SESSIONS,
+    running: MY_DB_LONG_RUNNING,
+    largest: MY_DB_LARGEST_TABLES,
+    topStatements: MY_DB_TOP_STATEMENTS,
+  },
+};

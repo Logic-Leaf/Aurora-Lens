@@ -10,7 +10,8 @@ import {
 import { fromIni } from '@aws-sdk/credential-providers';
 import type { AwsCredentialIdentityProvider } from '@smithy/types';
 import * as meta from './metadata';
-import { ColumnInfo, TableDefinition } from './sqlgen';
+import type { Engine } from './guards';
+import { buildDdl, ColumnInfo, qualified, TableDefinition } from './sqlgen';
 import { Connection } from './validate';
 
 export interface QueryResult {
@@ -108,15 +109,35 @@ export class DataApiClient {
     return { columns, types, rows };
   }
 
+  private detected?: Engine;
+  private detecting?: Promise<Engine>;
+
+  /** The engine once detected, for synchronous callers (CodeLens, copy name); PostgreSQL until known. */
+  get knownEngine(): Engine {
+    return this.detected ?? 'postgres';
+  }
+
+  /** Detects Aurora PostgreSQL vs Aurora MySQL from version(), once per client. */
+  engine(): Promise<Engine> {
+    if (this.detected) {
+      return Promise.resolve(this.detected);
+    }
+    this.detecting ??= this.exec('SELECT version() AS v')
+      .then((r) => (this.detected = engineFromVersion(String(r.rows[0]?.[0] ?? ''))))
+      .finally(() => (this.detecting = undefined));
+    return this.detecting;
+  }
+
   /**
    * Runs a user statement. In read-only mode the database enforces it: the statement runs in a
-   * `READ ONLY` transaction with a `statement_timeout`, and the transaction is always rolled back,
+   * READ ONLY transaction with a statement timeout, and the transaction is always rolled back,
    * so nothing it does is kept even if a client-side check misses something.
    */
   async query(sql: string, opts: QueryOptions): Promise<QueryResult> {
     if (!opts.readOnly) {
       return this.exec(sql);
     }
+    const engine = await this.engine();
     const resourceArn = this.conn.clusterArn;
     const secretArn = this.conn.secretArn;
     const begin = await this.client.send(new BeginTransactionCommand({ resourceArn, secretArn, database: this.conn.database }));
@@ -124,12 +145,25 @@ export class DataApiClient {
     if (!transactionId) {
       throw new Error('The Data API did not return a transaction id; refusing to run without read-only protection.');
     }
+    const ms = Math.max(1, Math.floor(opts.timeoutSeconds)) * 1000;
+    let resetTimeout = false;
     try {
-      await this.exec('SET TRANSACTION READ ONLY', undefined, transactionId);
-      const ms = Math.max(1, Math.floor(opts.timeoutSeconds)) * 1000;
-      await this.exec(`SET LOCAL statement_timeout = ${ms}`, undefined, transactionId);
+      if (engine === 'mysql') {
+        // MySQL cannot change the characteristics of a transaction already in progress, so start a
+        // new READ ONLY transaction on the same pinned connection (this implicitly ends the empty
+        // one the Data API opened). max_execution_time is session-level, so it is reset below.
+        await this.exec(`SET SESSION max_execution_time = ${ms}`, undefined, transactionId);
+        resetTimeout = true;
+        await this.exec('START TRANSACTION READ ONLY', undefined, transactionId);
+      } else {
+        await this.exec('SET TRANSACTION READ ONLY', undefined, transactionId);
+        await this.exec(`SET LOCAL statement_timeout = ${ms}`, undefined, transactionId);
+      }
       return await this.exec(sql, undefined, transactionId);
     } finally {
+      if (resetTimeout) {
+        await this.exec('SET SESSION max_execution_time = DEFAULT', undefined, transactionId).catch(() => undefined);
+      }
       await this.client.send(new RollbackTransactionCommand({ resourceArn, secretArn, transactionId })).catch(() => undefined);
     }
   }
@@ -144,29 +178,58 @@ export class DataApiClient {
     return r.rows.map((row) => Object.fromEntries(r.columns.map((c, i) => [c, row[i]])) as T);
   }
 
+  /** The catalog query set for this cluster's engine. */
+  async sqlFor(): Promise<meta.Catalog> {
+    return meta.CATALOG[await this.engine()];
+  }
+
   async schemas(): Promise<string[]> {
-    return (await this.catalogObjects<{ name: string }>(meta.SQL_SCHEMAS)).map((r) => r.name);
+    return (await this.catalogObjects<{ name: string }>((await this.sqlFor()).schemas)).map((r) => String(r.name));
   }
 
-  relations(schema: string): Promise<Relation[]> {
-    return this.catalogObjects<Relation>(meta.SQL_RELATIONS, { schema });
+  async relations(schema: string): Promise<Relation[]> {
+    const rows = await this.catalogObjects<Record<string, unknown>>((await this.sqlFor()).relations, { schema });
+    return rows.map((r) => ({
+      name: String(r.name),
+      kind: String(r.kind),
+      estimate: Number(r.estimate) || 0,
+      partitions: Number(r.partitions) || 0,
+      comment: (r.comment as string | null) ?? null,
+    }));
   }
 
-  partitions(schema: string, table: string): Promise<Partition[]> {
-    return this.catalogObjects<Partition>(meta.SQL_PARTITIONS, { schema, table });
+  async partitions(schema: string, table: string): Promise<Partition[]> {
+    const rows = await this.catalogObjects<Record<string, unknown>>((await this.sqlFor()).partitions, { schema, table });
+    return rows.map((r) => ({
+      schema: String(r.schema),
+      name: String(r.name),
+      kind: String(r.kind),
+      estimate: Number(r.estimate) || 0,
+      bound: (r.bound as string | null) ?? null,
+    }));
   }
 
   async columns(schema: string, table: string): Promise<ColumnInfo[]> {
-    const rows = await this.catalogObjects<Record<string, unknown>>(meta.SQL_COLUMNS, { schema, table });
+    const rows = await this.catalogObjects<Record<string, unknown>>((await this.sqlFor()).columns, { schema, table });
     return rows.map((r) => ({
       name: String(r.name),
       type: String(r.type),
-      notNull: r.not_null === true,
-      defaultValue: (r.default_value as string | null) ?? null,
-      isPk: r.is_pk === true,
-      isFk: r.is_fk === true,
+      notNull: truthy(r.not_null),
+      defaultValue: r.default_value === null || r.default_value === undefined ? null : String(r.default_value),
+      isPk: truthy(r.is_pk),
+      isFk: truthy(r.is_fk),
       comment: (r.comment as string | null) ?? null,
     }));
+  }
+
+  /** Readable DDL: rebuilt from the catalog on PostgreSQL, SHOW CREATE on MySQL. */
+  async ddl(schema: string, table: string): Promise<string> {
+    if ((await this.engine()) === 'mysql') {
+      const r = await this.exec(`SHOW CREATE TABLE ${qualified(schema, table, 'mysql')}`);
+      const text = r.rows[0]?.[1];
+      return `${String(text ?? '')};\n`;
+    }
+    return buildDdl(await this.definition(schema, table));
   }
 
   async definition(schema: string, table: string): Promise<TableDefinition> {
@@ -190,4 +253,14 @@ export class DataApiClient {
       comment: i.comment ?? null,
     };
   }
+}
+
+/** PostgreSQL's version() starts with "PostgreSQL"; Aurora MySQL returns e.g. "8.0.mysql_aurora.3.08.0". */
+export function engineFromVersion(version: string): Engine {
+  return /postgres/i.test(version) ? 'postgres' : 'mysql';
+}
+
+/** Booleans arrive as true/false from PostgreSQL and as 1/0 from MySQL. */
+function truthy(v: unknown): boolean {
+  return v === true || v === 1 || v === '1' || v === 't';
 }

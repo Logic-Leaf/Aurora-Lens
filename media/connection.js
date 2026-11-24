@@ -100,7 +100,7 @@
     const h = el('div');
     h.append(
       el('h1', '', init.mode === 'edit' ? `Edit connection` : 'New connection'),
-      el('p', '', 'Connect to an Amazon Aurora PostgreSQL cluster through the RDS Data API. You need the cluster ARN, the ARN of a Secrets Manager secret for a database user, and the database name.'),
+      el('p', '', 'Connect to an Amazon Aurora PostgreSQL or MySQL cluster through the RDS Data API. You need the cluster ARN, the ARN of a Secrets Manager secret for a database user, and the database name. The engine is detected automatically.'),
     );
     hero.append(h);
 

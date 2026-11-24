@@ -16,7 +16,7 @@ import {
 import { ConnectionForm } from './connectionForm';
 import { diagnose } from './diagnose';
 import { explainError } from './explain';
-import { checkReadOnly, statementAt, statementRanges, withRowLimit } from './guards';
+import { checkReadOnly, Engine, statementAt, statementRanges, withRowLimit } from './guards';
 import { HistoryNode, HistoryStore, HistoryTree } from './history';
 import { MonitorPanel } from './monitorPanel';
 import { ResultsView } from './resultsPanel';
@@ -131,8 +131,21 @@ export function activate(context: vscode.ExtensionContext): void {
   // ---------------- running SQL ----------------
   const runSql = async (conn: Connection, raw: string): Promise<void> => {
     const readOnly = isReadOnly(conn.environment);
+    const env = conn.environment.toUpperCase();
+    // The engine decides SQL parsing rules (quotes, comments) for the safety checks below.
+    let engine: Engine;
+    try {
+      engine = await pool.get(conn).engine();
+    } catch (err) {
+      const why = explainError(err, conn);
+      if (why.auth) {
+        void promptLogin();
+      }
+      await results.showError(why, (err as Error)?.message ?? String(err), { env, connection: conn.name });
+      return;
+    }
     if (readOnly) {
-      const problem = checkReadOnly(raw);
+      const problem = checkReadOnly(raw, engine);
       if (problem) {
         const suffix = conn.environment === 'prod' ? ' Production connections are always read-only.' : '';
         void vscode.window.showErrorMessage(`AuroraLens: ${problem}${suffix}`);
@@ -152,8 +165,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }
     const limit = maxRows();
-    const sql = withRowLimit(raw, limit);
-    const env = conn.environment.toUpperCase();
+    const sql = withRowLimit(raw, limit, engine);
     const started = Date.now();
     await results.running({ env, connection: conn.name });
     try {
@@ -223,11 +235,13 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   };
 
-  const script = (build: (s: string, t: string, cols: gen.ColumnInfo[]) => string) =>
+  const script = (build: (s: string, t: string, cols: gen.ColumnInfo[], engine: Engine) => string) =>
     relationCommand(async (node) => {
-      const cols = await pool.get(node.conn).columns(node.schema, node.name);
-      await openSql(node.conn, build(node.schema, node.name, cols));
+      const db = pool.get(node.conn);
+      const cols = await db.columns(node.schema, node.name);
+      await openSql(node.conn, build(node.schema, node.name, cols, await db.engine()));
     });
+  const engineOf = (conn: Connection) => pool.get(conn).knownEngine;
 
   reload();
 
@@ -249,7 +263,7 @@ export function activate(context: vscode.ExtensionContext): void {
       onDidChangeCodeLenses: lensChanged.event,
       provideCodeLenses(doc) {
         const env = active ? label(active) : 'no connection';
-        return statementRanges(doc.getText()).map((r) => {
+        return statementRanges(doc.getText(), active ? engineOf(active) : 'postgres').map((r) => {
           const pos = doc.positionAt(r.start);
           return new vscode.CodeLens(new vscode.Range(pos, pos), {
             title: `$(play) Run on ${env}`,
@@ -311,7 +325,11 @@ export function activate(context: vscode.ExtensionContext): void {
       // Selection wins; otherwise run the statement under the cursor.
       const raw =
         editor.selection.isEmpty || typeof at === 'number'
-          ? statementAt(editor.document.getText(), typeof at === 'number' ? at : editor.document.offsetAt(editor.selection.active))
+          ? statementAt(
+              editor.document.getText(),
+              typeof at === 'number' ? at : editor.document.offsetAt(editor.selection.active),
+              await pool.get(conn).engine().catch(() => engineOf(conn)),
+            )
           : editor.document.getText(editor.selection);
       await runSql(conn, raw);
     }),
@@ -424,9 +442,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
 
     // --- table actions ---
-    cmd('auroralens.table.selectTop', relationCommand((n) => runSql(n.conn, gen.selectTop(n.schema, n.name, 1000)))),
-    cmd('auroralens.table.count', relationCommand((n) => runSql(n.conn, gen.selectCount(n.schema, n.name)))),
-    cmd('auroralens.table.openSelect', relationCommand((n) => openSql(n.conn, gen.selectTop(n.schema, n.name, 100)))),
+    cmd('auroralens.table.selectTop', relationCommand((n) => runSql(n.conn, gen.selectTop(n.schema, n.name, 1000, engineOf(n.conn))))),
+    cmd('auroralens.table.count', relationCommand((n) => runSql(n.conn, gen.selectCount(n.schema, n.name, engineOf(n.conn))))),
+    cmd('auroralens.table.openSelect', relationCommand((n) => openSql(n.conn, gen.selectTop(n.schema, n.name, 100, engineOf(n.conn))))),
     cmd('auroralens.table.scriptSelect', script(gen.scriptSelect)),
     cmd('auroralens.table.scriptInsert', script(gen.scriptInsert)),
     cmd('auroralens.table.scriptUpdate', script(gen.scriptUpdate)),
@@ -434,20 +452,23 @@ export function activate(context: vscode.ExtensionContext): void {
     cmd(
       'auroralens.table.ddl',
       relationCommand(async (n) => {
-        const def = await pool.get(n.conn).definition(n.schema, n.name);
-        const header = `-- ${gen.qualified(n.schema, n.name)} on ${label(n.conn)}\n-- Reconstructed by AuroraLens from the PostgreSQL catalog for review.\n\n`;
-        await openSql(n.conn, header + gen.buildDdl(def));
+        const db = pool.get(n.conn);
+        const ddl = await db.ddl(n.schema, n.name);
+        const source = (await db.engine()) === 'mysql' ? 'SHOW CREATE TABLE' : 'the PostgreSQL catalog';
+        const header = `-- ${gen.qualified(n.schema, n.name, engineOf(n.conn))} on ${label(n.conn)}\n-- Generated by AuroraLens from ${source} for review.\n\n`;
+        await openSql(n.conn, header + ddl);
       }),
     ),
     cmd('auroralens.table.copyName', async (n?: RelationNode) => {
       if (n instanceof RelationNode) {
-        await vscode.env.clipboard.writeText(gen.qualified(n.schema, n.name));
-        vscode.window.setStatusBarMessage(`AuroraLens: copied ${gen.qualified(n.schema, n.name)}`, 3000);
+        const name = gen.qualified(n.schema, n.name, engineOf(n.conn));
+        await vscode.env.clipboard.writeText(name);
+        vscode.window.setStatusBarMessage(`AuroraLens: copied ${name}`, 3000);
       }
     }),
     cmd('auroralens.column.copyName', async (n?: ColumnNode) => {
       if (n instanceof ColumnNode) {
-        await vscode.env.clipboard.writeText(gen.quoteIdent(n.column.name));
+        await vscode.env.clipboard.writeText(gen.quoteIdent(n.column.name, engineOf(n.conn)));
         vscode.window.setStatusBarMessage(`AuroraLens: copied ${n.column.name}`, 3000);
       }
     }),

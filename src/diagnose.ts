@@ -1,6 +1,5 @@
 import { DataApiClient } from './dataApi';
 import { explainError } from './explain';
-import { SQL_IDENTITY } from './metadata';
 import { Connection, connectionFieldErrors } from './validate';
 
 export type StepStatus = 'pending' | 'running' | 'ok' | 'fail' | 'skip';
@@ -61,13 +60,13 @@ export async function diagnose(conn: Connection, client: DataApiClient | undefin
       return mins !== undefined ? `Signed in · session valid for about ${mins} min` : 'Credentials resolved';
     })) &&
     (await run(2, async () => {
-      const r = await client!.catalogObjects<{ db_user: string; database: string; version: string }>(SQL_IDENTITY);
+      const r = await client!.catalogObjects<{ db_user: string; database: string; version: string }>((await client!.sqlFor()).identity);
       const who = r[0];
       return who ? `Connected as ${who.db_user} to ${who.database} · ${who.version}` : 'Connected';
     })) &&
     (await run(3, async () => {
       await client!.query('SELECT 1', { readOnly: true, timeoutSeconds: 10 });
-      return 'BEGIN · SET TRANSACTION READ ONLY · ROLLBACK all succeeded';
+      return 'Read-only transaction opened, enforced and rolled back';
     })) &&
     (await run(4, async () => {
       const schemas = await client!.schemas();

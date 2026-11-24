@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import type { Connection } from './config';
 import { isReadOnly } from './config';
 import { explainError } from './explain';
-import * as meta from './metadata';
+import { CATALOG } from './metadata';
 import { ClientPool } from './tree';
 import { webviewHtml, webviewOptions } from './webview';
 
@@ -99,19 +99,22 @@ export class MonitorPanel {
     const rds = new RDSClient({ region: this.conn.region, credentials: db.credentials });
     const cw = new CloudWatchClient({ region: this.conn.region, credentials: db.credentials });
     // Cluster facts first: they tell the metrics section whether the cluster is Serverless v2.
+    const engine = await db.engine().catch(() => 'postgres' as const);
+    const sql = CATALOG[engine];
+    this.post({ type: 'engine', engine });
     await this.section('cluster', () => this.loadCluster(rds));
     await Promise.all([
       this.section('metrics', () => this.loadMetrics(cw)),
       this.section('instances', () => this.loadInstances(rds)),
-      this.section('overview', async () => (await db.catalogObjects(meta.SQL_DB_OVERVIEW))[0] ?? {}),
-      this.section('sessions', () => db.catalogObjects(meta.SQL_DB_SESSIONS)),
-      this.section('running', () => db.catalogObjects(meta.SQL_DB_LONG_RUNNING)),
-      this.section('largest', () => db.catalogObjects(meta.SQL_DB_LARGEST_TABLES)),
+      this.section('overview', async () => (await db.catalogObjects(sql.overview))[0] ?? {}),
+      this.section('sessions', () => db.catalogObjects(sql.sessions)),
+      this.section('running', () => db.catalogObjects(sql.running)),
+      this.section('largest', () => db.catalogObjects(sql.largest)),
       this.section('statements', async () => {
         try {
-          return await db.catalogObjects(meta.SQL_DB_TOP_STATEMENTS);
+          return await db.catalogObjects(sql.topStatements);
         } catch (err) {
-          if (/pg_stat_statements|does not exist|must be loaded/i.test((err as Error)?.message ?? '')) {
+          if (/pg_stat_statements|performance_schema|does not exist|must be loaded|doesn't exist/i.test((err as Error)?.message ?? '')) {
             return { unavailable: true };
           }
           throw err;

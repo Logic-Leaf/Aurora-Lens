@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.0
+
+### Added
+- **Aurora MySQL (Preview).** The engine is detected automatically, so the same connection form works for PostgreSQL and MySQL. Supported for MySQL:
+  - schema tree and table actions
+  - View DDL (via `SHOW CREATE TABLE`)
+  - the results grid
+  - the cluster monitor (`information_schema` and `performance_schema`)
+- **MySQL-aware safety.** Statements run in `START TRANSACTION READ ONLY` with `max_execution_time` and are always rolled back. The tokenizer understands backticks, `#` comments and backslash escapes, and blocks:
+  - `SELECT … INTO` (including `INTO OUTFILE S3`)
+  - `/*! … */` executable comments
+  - Lambda and SageMaker functions
+  - `GET_LOCK`, `LOAD_FILE`
+- Generated scripts quote identifiers correctly for each engine.
+
+
 ## 0.3.0
 
 ### Added
