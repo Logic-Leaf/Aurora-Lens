@@ -14,3 +14,7 @@ esbuild.js
 *.local.*
 .DS_Store
 .gitignore
+.github/**
+.editorconfig
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md

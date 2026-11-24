@@ -1,0 +1,43 @@
+name: Bug report
+description: Something in AuroraLens is not working as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. **Never include account IDs, ARNs, endpoints, query results or credentials.** For security vulnerabilities, follow [SECURITY.md](https://github.com/Logic-Leaf/auroralens/blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Right-click a table and choose Select Top 1000
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: test-connection
+    attributes:
+      label: Test Connection output (if relevant)
+      description: Right-click the connection and choose Test Connection. Paste the step results with identifiers removed.
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Database engine
+      options: [Aurora PostgreSQL, Aurora MySQL, Not sure]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: AuroraLens, VS Code and OS versions
+      placeholder: AuroraLens 0.4.0, VS Code 1.106, macOS 15
+    validations:
+      required: true
